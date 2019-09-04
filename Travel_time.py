@@ -2,7 +2,7 @@ from jdbc.Connect import get_connection, free
 import datetime
 
 def plate_match(conn, SSID, start_time, end_time):
-    # SSID='HK-92', start_time是一个list，形式为：["'2019-7-2 17:00:00'", "'2019-7-2 16:00:00'"]
+    # SSID='HK-92', start_time是一个list，形式为：['2019-7-2 17:00:00', '2019-7-2 16:00:00']
     if conn == None:
         conn = get_connection()  # 建立数据库连接
 
