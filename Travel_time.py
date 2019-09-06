@@ -5,7 +5,7 @@ from jdbc.holiday import holiday
 
 def plate_match(conn, SSID, start_time, end_time):
     # SSID=['HK-92','HK-93'] [下游，上游], start_time是一个list，形式为：['2019-7-2 17:00:00', '2019-7-2 16:00:00']
-    date_type = holiday(start_time[0][0:10])
+    date_types = holiday(start_time[0][0:10])
     if conn == None:
         conn = get_connection()  # 建立数据库连接
 
@@ -31,10 +31,59 @@ def plate_match(conn, SSID, start_time, end_time):
 
     # print(merge_ls['travel_time'].dtypes)
     merge_ls = merge_ls[['HPHM', 'HPZL_y', 'JGSJ_x', 'JGSJ_y', 'travel_time']] # 提取列表中的5列组成新的merge_ls
-    merge_ls['date_type'] = date_type   # 新增一列，用于表征日期性质，0：工作日；1：周末；2：节假日
+    merge_ls['date_types'] = date_types   # 新增一列，用于表征日期性质，0：工作日；1：周末；2：节假日
 
     free(conn, cr)
     return merge_ls
+
+# 将dataframe转换成list，方便导入oracle
+def dataframe_Tolist(merge_ls):
+    HPHM = merge_ls['HPHM'].tolist()
+    HPZL_y = merge_ls['HPZL_y'].tolist()
+    JGSJ_x = merge_ls['JGSJ_x'].tolist()
+    JGSJ_y = merge_ls['JGSJ_y'].tolist()
+    TRAVEL_TIME = merge_ls['travel_time'].tolist()
+    DATE_TYPES = merge_ls['date_types'].tolist()
+
+    a = [HPHM, HPZL_y, JGSJ_x, JGSJ_y, TRAVEL_TIME, DATE_TYPES]
+    return list(zip(*a))
+
+# # 写入数据库
+def Insert_db(conn, result):
+    if conn == None:
+        conn = get_connection()
+    cr = conn.cursor()
+    # print('diaoyong')
+
+    sql = "INSERT INTO SYS.TRAVEL_TIME_HK93TOHK92(HPHM, HPZL_y, JGSJ_x, JGSJ_y, TRAVEL_TIME, DATE_TYPES) VALUES (:1, :2, :3, :4, :5, :6)"
+
+    try:
+        cr.executemany(sql, result)
+        conn.commit()
+        print('insert successfully!')
+    except:
+        conn.rollback()
+
+    # 关闭游标、关闭数据库连接
+    cr.close()
+    conn.close()
+    return 0
+
+def Convert_strTo_time_then_str(start_time,timedelta=0):
+    tem = datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
+    tem = tem + datetime.timedelta(minutes=timedelta)
+    tem = datetime.strftime(tem, '%Y-%m-%d %H:%M:%S')
+    return tem
+
+def Start_End_time_list(start_time): # 输入start_time格式为'2019-05-02 16:00:00'；date_length为整型，表示时间跨度
+    st1 = start_time
+    st2 = Convert_strTo_time_then_str(start_time,-10)
+    lis1 = [st1, st2]
+    ed1 = Convert_strTo_time_then_str(start_time,120)
+    ed2 = Convert_strTo_time_then_str(start_time, 130)
+    lis2 = [ed1, ed2]
+
+    return lis1, lis2
 
 if __name__ == '__main__':
     starttime = datetime.datetime.now()  # 统计程序的开始时刻
@@ -42,5 +91,12 @@ if __name__ == '__main__':
     conn = None
     query_res = plate_match(conn, ['HK-92','HK-93'], ['2019-05-02 16:00:00','2019-05-02 15:50:00'],['2019-05-02 18:00:00','2019-05-02 18:10:00'])
     print(query_res)
+    result = dataframe_Tolist(query_res)
+    print(result)
+    print(len(result))
+    Insert_db(conn, result)
+
+    endtime = datetime.datetime.now()
+    print("the program runs : %d s" % (endtime - starttime).seconds)
 
 
