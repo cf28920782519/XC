@@ -2,6 +2,7 @@ from jdbc.Connect import get_connection, free
 import datetime
 import pandas as pd
 from jdbc.holiday import holiday
+from jdbc.Start_End_time_list import Start_End_time_list
 
 def plate_match(conn, SSID, start_time, end_time):
     # SSID=['HK-92','HK-93'] [下游，上游], start_time是一个list，形式为：['2019-7-2 17:00:00', '2019-7-2 16:00:00']
@@ -17,7 +18,7 @@ def plate_match(conn, SSID, start_time, end_time):
     dataframe_res_low = pd.DataFrame(list(query_res_low),columns=['HPHM', 'HPZL','JGSJ'])
 
     # 查询路段上游的车牌和经过时间
-    query_plate_upper = ("SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in ('10','2','3'，'4') AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')")%(SSID[1],start_time[0],end_time[0])
+    query_plate_upper = ("SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in ('10','11','12','2','3'，'4') AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')")%(SSID[1],start_time[0],end_time[0])
     cr.execute(query_plate_upper)
     query_res_upper = cr.fetchall()
     dataframe_res_upper = pd.DataFrame(list(query_res_upper),columns=['HPHM', 'HPZL','JGSJ'])
@@ -69,34 +70,28 @@ def Insert_db(conn, result):
     conn.close()
     return 0
 
-def Convert_strTo_time_then_str(start_time,timedelta=0):
-    tem = datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
-    tem = tem + datetime.timedelta(minutes=timedelta)
-    tem = datetime.strftime(tem, '%Y-%m-%d %H:%M:%S')
-    return tem
 
-def Start_End_time_list(start_time): # 输入start_time格式为'2019-05-02 16:00:00'；date_length为整型，表示时间跨度
-    st1 = start_time
-    st2 = Convert_strTo_time_then_str(start_time,-10)
-    lis1 = [st1, st2]
-    ed1 = Convert_strTo_time_then_str(start_time,120)
-    ed2 = Convert_strTo_time_then_str(start_time, 130)
-    lis2 = [ed1, ed2]
-
-    return lis1, lis2
 
 if __name__ == '__main__':
     starttime = datetime.datetime.now()  # 统计程序的开始时刻
 
-    conn = None
-    query_res = plate_match(conn, ['HK-92','HK-93'], ['2019-05-02 16:00:00','2019-05-02 15:50:00'],['2019-05-02 18:00:00','2019-05-02 18:10:00'])
-    print(query_res)
-    result = dataframe_Tolist(query_res)
-    print(result)
-    print(len(result))
-    Insert_db(conn, result)
+    start_time_list, end_time_list = Start_End_time_list('2019-05-01 16:00:00', 125)
+    for i in range(len(start_time_list)):
+        conn = None
+        query_res = plate_match(conn, ['HK-92', 'HK-93'], start_time_list[i], end_time_list[i])
+        # print(query_res)
+        result = dataframe_Tolist(query_res)
+        # print(result)
+        # print(len(result))
+        Insert_db(conn, result)
 
     endtime = datetime.datetime.now()
     print("the program runs : %d s" % (endtime - starttime).seconds)
+
+
+
+
+
+
 
 
