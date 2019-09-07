@@ -29,6 +29,8 @@ def plate_match(conn, SSID, start_time, end_time):
     merge_ls = merge_ls.drop(index=(merge_ls.loc[merge_ls['JGSJ_x'] < merge_ls['JGSJ_y']].index)).reset_index() # 如果下游检测时间小于上游检测时间，说明匹配错误
     merge_ls['travel_time'] = merge_ls['JGSJ_x'].sub(merge_ls['JGSJ_y'])    # jgsj_x - jgsj_y，即下游检测时间-上游检测时间
     merge_ls['travel_time'] = pd.to_numeric(merge_ls['travel_time'].dt.seconds, downcast='integer') # 计算结果从timedelta转为int，以秒为单位
+    merge_ls = merge_ls.sort_values(by=['JGSJ_y'], ascending=True)  # 将dataframe按照JGSJ_y的排序
+    merge_ls = merge_ls.drop_duplicates('JGSJ_x', 'last', inplace=False)  # 按JGSJ_x，去除该列下面的重复行,删除重复项并保留最后一次出现的项
 
     # print(merge_ls['travel_time'].dtypes)
     merge_ls = merge_ls[['HPHM', 'HPZL_y', 'JGSJ_x', 'JGSJ_y', 'travel_time']] # 提取列表中的5列组成新的merge_ls
@@ -75,15 +77,19 @@ def Insert_db(conn, result):
 if __name__ == '__main__':
     starttime = datetime.datetime.now()  # 统计程序的开始时刻
 
-    start_time_list, end_time_list = Start_End_time_list('2019-05-01 16:00:00', 125)
-    for i in range(len(start_time_list)):
-        conn = None
-        query_res = plate_match(conn, ['HK-92', 'HK-93'], start_time_list[i], end_time_list[i])
-        # print(query_res)
-        result = dataframe_Tolist(query_res)
-        # print(result)
-        # print(len(result))
-        Insert_db(conn, result)
+    conn = None
+    query_res = plate_match(conn, ['HK-92', 'HK-93'], ['2019-05-03 16:00:00', '2019-05-03 15:50:00'], ['2019-05-03 18:00:00', '2019-05-03 18:10:00'])
+    result = dataframe_Tolist(query_res)
+    Insert_db(conn, result)
+    # start_time_list, end_time_list = Start_End_time_list('2019-05-01 16:00:00', 125)
+    # for i in range(len(start_time_list)):
+    #     conn = None
+    #     query_res = plate_match(conn, ['HK-92', 'HK-93'], start_time_list[i], end_time_list[i])
+    #     # print(query_res)
+    #     result = dataframe_Tolist(query_res)
+    #     # print(result)
+    #     # print(len(result))
+    #     Insert_db(conn, result)
 
     endtime = datetime.datetime.now()
     print("the program runs : %d s" % (endtime - starttime).seconds)
