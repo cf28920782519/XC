@@ -18,7 +18,7 @@ def plate_match(conn, SSID, start_time, end_time):
     dataframe_res_low = pd.DataFrame(list(query_res_low),columns=['HPHM', 'HPZL','JGSJ'])
 
     # 查询路段上游的车牌和经过时间
-    query_plate_upper = ("SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')")%(SSID[1],start_time[0],end_time[0])
+    query_plate_upper = ("SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in ('1','2','3','4','5','6','10','11','12') AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')")%(SSID[1],start_time[0],end_time[0])
     cr.execute(query_plate_upper)
     query_res_upper = cr.fetchall()
     dataframe_res_upper = pd.DataFrame(list(query_res_upper),columns=['HPHM', 'HPZL','JGSJ'])
