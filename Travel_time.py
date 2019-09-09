@@ -18,7 +18,7 @@ def plate_match(conn, SSID, start_time, end_time):
     dataframe_res_low = pd.DataFrame(list(query_res_low),columns=['HPHM', 'HPZL','JGSJ'])
 
     # 查询路段上游的车牌和经过时间
-    query_plate_upper = ("SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in ('10','11','12','2','3'，'4') AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')")%(SSID[1],start_time[0],end_time[0])
+    query_plate_upper = ("SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')")%(SSID[1],start_time[0],end_time[0])
     cr.execute(query_plate_upper)
     query_res_upper = cr.fetchall()
     dataframe_res_upper = pd.DataFrame(list(query_res_upper),columns=['HPHM', 'HPZL','JGSJ'])
@@ -31,6 +31,7 @@ def plate_match(conn, SSID, start_time, end_time):
     merge_ls['travel_time'] = pd.to_numeric(merge_ls['travel_time'].dt.seconds, downcast='integer') # 计算结果从timedelta转为int，以秒为单位
     merge_ls = merge_ls.sort_values(by=['JGSJ_y'], ascending=True)  # 将dataframe按照JGSJ_y的排序
     merge_ls = merge_ls.drop_duplicates('JGSJ_x', 'last', inplace=False)  # 按JGSJ_x，去除该列下面的重复行,删除重复项并保留最后一次出现的项
+    merge_ls = merge_ls.drop_duplicates('JGSJ_y', 'last', inplace=False)  # 按JGSJ_y，去除该列下面的重复行,删除重复项并保留最后一次出现的项
 
     # print(merge_ls['travel_time'].dtypes)
     merge_ls = merge_ls[['HPHM', 'HPZL_y', 'JGSJ_x', 'JGSJ_y', 'travel_time']] # 提取列表中的5列组成新的merge_ls
@@ -76,20 +77,22 @@ def Insert_db(conn, result):
 
 if __name__ == '__main__':
     starttime = datetime.datetime.now()  # 统计程序的开始时刻
-
-    conn = None
-    query_res = plate_match(conn, ['HK-92', 'HK-93'], ['2019-05-03 16:00:00', '2019-05-03 15:50:00'], ['2019-05-03 18:00:00', '2019-05-03 18:10:00'])
-    result = dataframe_Tolist(query_res)
-    Insert_db(conn, result)
-    # start_time_list, end_time_list = Start_End_time_list('2019-05-01 16:00:00', 125)
-    # for i in range(len(start_time_list)):
-    #     conn = None
-    #     query_res = plate_match(conn, ['HK-92', 'HK-93'], start_time_list[i], end_time_list[i])
-    #     # print(query_res)
-    #     result = dataframe_Tolist(query_res)
-    #     # print(result)
-    #     # print(len(result))
-    #     Insert_db(conn, result)
+    ## 开发测试用
+    # conn = None
+    # query_res = plate_match(conn, ['HK-92', 'HK-93'], ['2019-05-03 16:00:00', '2019-05-03 15:50:00'], ['2019-05-03 18:00:00', '2019-05-03 18:10:00'])
+    # result = dataframe_Tolist(query_res)
+    # Insert_db(conn, result)
+    ## 跑批量数据用的
+    start_time_list, end_time_list = Start_End_time_list('2019-05-01 16:00:00', 118)
+    for i in range(len(start_time_list)):
+        conn = None
+        query_res = plate_match(conn, ['HK-92', 'HK-93'], start_time_list[i], end_time_list[i])
+        # print(query_res)
+        result = dataframe_Tolist(query_res)
+        # print(result)
+        # print(len(result))
+        print('day: ', i)
+        Insert_db(conn, result)
 
     endtime = datetime.datetime.now()
     print("the program runs : %d s" % (endtime - starttime).seconds)
