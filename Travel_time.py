@@ -4,21 +4,42 @@ import pandas as pd
 from jdbc.holiday import holiday
 from jdbc.Start_End_time_list import Start_End_time_list
 
-def plate_match(conn, SSID, start_time, end_time):
-    # SSID=['HK-92','HK-93'] [下游，上游], start_time是一个list，形式为：['2019-7-2 17:00:00', '2019-7-2 16:00:00']
+def plate_match(conn, SSID, CDBH, start_time, end_time):
+    # SSID=['HK-92','HK-107','HK-93'] [终点，起点], start_time是一个list，形式为：['2019-7-2 17:00:00', '2019-7-2 16:00:00']
     date_types = holiday(start_time[0][0:10])
     if conn == None:
         conn = get_connection()  # 建立数据库连接
 
     cr = conn.cursor()  # 生成连接的游标
-    # 查询路段下游的车牌和经过时间
-    query_plate_low = ("SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in ('1','2','3') AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')")%(SSID[0],start_time[0],end_time[0])
+    # 查询路段下游的车牌和经过时间，使用时从下面4个终点里面选择一个取消注释（注释掉其他3个终点）
+
+    # 终点为HK-92，东进口
+    query_plate_low = ("SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in %s AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')")%(SSID[0],CDBH[0],start_time[0],end_time[0])
+
+    # # 终点为HK-107，自东向西
+    # query_plate_low = (
+    #                       "SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in ('1','2') AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')") % (
+    #                   SSID[1], start_time[0], end_time[0])
+    #
+    # # 终点为HK-93，西进口
+    # query_plate_low = (
+    #                       "SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in ('7','8','9') AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')") % (
+    #                   SSID[2], start_time[0], end_time[0])
+    #
+    # # 终点为HK-107，自西向东
+    # query_plate_low = (
+    #                       "SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in ('3','4') AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')") % (
+    #                   SSID[1], start_time[0], end_time[0])
+
     cr.execute(query_plate_low)
     query_res_low = cr.fetchall()
     dataframe_res_low = pd.DataFrame(list(query_res_low),columns=['HPHM', 'HPZL','JGSJ'])
 
     # 查询路段上游的车牌和经过时间
-    query_plate_upper = ("SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in ('1','2','3','4','5','6','10','11','12') AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')")%(SSID[1],start_time[0],end_time[0])
+    # query_plate_upper = ("SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in ('1','2','3','4','5','6','10','11','12') AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')")%(SSID[1],start_time[0],end_time[0])
+    query_plate_upper = (
+                            "SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in %s AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')") % (
+                        SSID[1], CDBH[1], start_time[0], end_time[0])
     cr.execute(query_plate_upper)
     query_res_upper = cr.fetchall()
     dataframe_res_upper = pd.DataFrame(list(query_res_upper),columns=['HPHM', 'HPZL','JGSJ'])
@@ -53,13 +74,14 @@ def dataframe_Tolist(merge_ls):
     return list(zip(*a))
 
 # # 写入数据库
-def Insert_db(conn, result):
+def Insert_db(conn, table_name, result):
     if conn == None:
         conn = get_connection()
     cr = conn.cursor()
     # print('diaoyong')
 
-    sql = "INSERT INTO SYS.TRAVEL_TIME_HK93TOHK92(HPHM, HPZL_y, JGSJ_x, JGSJ_y, TRAVEL_TIME, DATE_TYPES) VALUES (:1, :2, :3, :4, :5, :6)"
+    # sql = "INSERT INTO SYS.TRAVEL_TIME_HK93TOHK92(HPHM, HPZL_y, JGSJ_x, JGSJ_y, TRAVEL_TIME, DATE_TYPES) VALUES (:1, :2, :3, :4, :5, :6)"
+    sql = ("INSERT INTO %s(HPHM, HPZL_y, JGSJ_x, JGSJ_y, TRAVEL_TIME, DATE_TYPES) VALUES (:1, :2, :3, :4, :5, :6)") % (table_name)
 
     try:
         cr.executemany(sql, result)
@@ -86,13 +108,16 @@ if __name__ == '__main__':
     start_time_list, end_time_list = Start_End_time_list('2019-05-01 16:00:00', 118)
     for i in range(len(start_time_list)):
         conn = None
-        query_res = plate_match(conn, ['HK-92', 'HK-93'], start_time_list[i], end_time_list[i])
+        # query_res = plate_match(conn, ['HK-92', 'HK-107'],[('1','2','3'), ('1','2')], start_time_list[i], end_time_list[i])   # 起：HK-107；终：HK-92。跑该子段时取消注释
+        query_res = plate_match(conn, ['HK-93', 'HK-107'], [('7', '8', '9'), ('3', '4')], start_time_list[i],
+                                end_time_list[i])
         # print(query_res)
         result = dataframe_Tolist(query_res)
         # print(result)
         # print(len(result))
         print('day: ', i)
-        Insert_db(conn, result)
+        # Insert_db(conn, 'TRAVEL_TIME_HK107TOHK92', result)    # 起：HK-107；终：HK-92。跑该子段时取消注释
+        Insert_db(conn, 'TRAVEL_TIME_HK107TOHK93', result)
 
     endtime = datetime.datetime.now()
     print("the program runs : %d s" % (endtime - starttime).seconds)
