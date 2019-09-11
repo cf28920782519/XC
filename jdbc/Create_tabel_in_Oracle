@@ -1,0 +1,38 @@
+% 建表语句（注意每个字段名要大写）
+
+%% SJCJ__T_CLXX_LS表
+create table SJCJ_T_CLXX_LS
+(
+  GCID          VARCHAR2(70) not null,
+  SSID          VARCHAR2(30) not null,
+  HPHM          VARCHAR2(15),
+  HPZL          VARCHAR2(2),
+  JGSJ          DATE not null,
+  SD            NUMBER(4),
+  CWKC          NUMBER(5),
+  HPYS          VARCHAR2(2),
+  CLLX          VARCHAR2(40),
+  CDBH          NUMBER(2),
+  FX            VARCHAR2(100),
+  WFDM          VARCHAR2(20),
+  SJLX          VARCHAR2(20) default '0',
+  GXSJ          DATE default SYSDATE not null,
+  CLYS          VARCHAR2(2),
+  HPTP_URL      VARCHAR2(512),
+  SCBJ          VARCHAR2(1),
+  SSXSCLIENTIPS VARCHAR2(512),
+  RKSJ          DATE default sysdate
+)
+
+
+%% TRAVEL_TIME计算结果表
+
+create table TRAVEL_TIME_HK93TOHK92
+(
+  HPHM          VARCHAR2(15),
+  HPZL_y          VARCHAR2(2),
+  JGSJ_x          DATE not null,
+  JGSJ_y          DATE not null,
+  TRAVEL_TIME     NUMBER(*,0),
+  DATE_TYPES      NUMBER(*,0)
+)
