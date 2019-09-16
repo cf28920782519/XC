@@ -39,6 +39,7 @@ def High_frequency_vehicles(conn, start_time):
     # 将df_holiday和dataframe_res_total整合
 
 
+    return df_holiday, dataframe_res_total
 
 
 
@@ -50,5 +51,9 @@ if __name__ == '__main__':
     starttime = datetime.datetime.now()  # 统计程序的开始时刻
     ## 开发测试用
     conn = None
-    query_res = High_frequency_vehicles(conn)
-    print(query_res)
+    df_holiday, dataframe_res_total = High_frequency_vehicles(conn,'2019-05-01 00:00:00')
+    print('休息日出行\r\n',df_holiday)
+    print('总体出行\r\n', dataframe_res_total)
+
+    endtime = datetime.datetime.now()
+    print("the program runs : %d s" % (endtime - starttime).seconds)
