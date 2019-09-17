@@ -41,7 +41,7 @@ def High_frequency_vehicles(conn, start_time):
     df_holiday_total_tem = pd.concat([dataframe_res_total, df_holiday], ignore_index=True, sort=True)   # 上下合并2个表格，空白地方填NaN
     # print(df_holiday_total_tem)
     df_holiday_total = df_holiday_total_tem.groupby('HPHM').sum().reset_index()    # 按HPHM列的内容，进行表内整合，对其他列执行求和的操作
-
+    df_holiday_total['WORK_numbers'] = df_holiday_total['TOTAL_numbers'].sub(df_holiday_total['HOLIDAY_numbers'])   # TOTAL_numbers列减去HOLIDAY_numbers列，赋值给新增的WORK_numbers列
 
     return df_holiday_total
     # return df_holiday, dataframe_res_total
