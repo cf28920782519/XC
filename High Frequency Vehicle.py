@@ -42,8 +42,8 @@ def High_frequency_vehicles(conn, start_time):
     # print(df_holiday_total_tem)
     df_holiday_total = df_holiday_total_tem.groupby('HPHM').sum().reset_index()    # 按HPHM列的内容，进行表内整合，对其他列执行求和的操作
     df_holiday_total['WORK_numbers'] = df_holiday_total['TOTAL_numbers'].sub(df_holiday_total['HOLIDAY_numbers'])   # TOTAL_numbers列减去HOLIDAY_numbers列，赋值给新增的WORK_numbers列
-    df_holiday_total['START_DATE'] = query_time_interval[0][:10]    # 新增一列用于表征计算起始的日期
-    df_holiday_total['END_DATE'] = query_time_interval[1][:10]  # 新增一列用于表征统计截止的日期（不包括当天）
+    df_holiday_total['START_DATE'] = datetime.datetime.strptime(query_time_interval[0], '%Y-%m-%d %H:%M:%S')    # 新增一列用于表征计算起始的日期
+    df_holiday_total['END_DATE'] = datetime.datetime.strptime(query_time_interval[1], '%Y-%m-%d %H:%M:%S')  # 新增一列用于表征统计截止的日期（不包括当天）
 
     # 通过上述流程，将同一周内出行的车牌及工作日、休息日出行次数统计完成
     # 下面将统计、筛选高频车（一周内出行5次以上，工作日出行3次以上的作为高频车）
@@ -77,6 +77,12 @@ def Insert_db(conn, table_name, result):
     # sql = "INSERT INTO SYS.TRAVEL_TIME_HK93TOHK92(HPHM, HPZL_y, JGSJ_x, JGSJ_y, TRAVEL_TIME, DATE_TYPES) VALUES (:1, :2, :3, :4, :5, :6)"
     sql = ("INSERT INTO %s(HPHM, TOTAL_NUM, WORK_NUM, HOLIDAY_NUM, START_DATE, END_DATE) VALUES (:1, :2, :3, :4, :5, :6)") % (table_name)
 
+    # # 如果插入数据库失败，可以取消下面3行注释，看报的错误是什么
+    # cr.executemany(sql, result)
+    # conn.commit()
+    # print('insert successfully!')
+
+    # # 批量运算时用下面的代码
     try:
         cr.executemany(sql, result)
         conn.commit()
@@ -101,6 +107,9 @@ if __name__ == '__main__':
     # # 开发测试用
     # df_holiday_total = High_frequency_vehicles(conn,'2019-05-01 00:00:00')
     # print('整合表\r\n',df_holiday_total)
+    # result = dataframe_Tolist(df_holiday_total)
+    # print('result\r\n',result)
+    # Insert_db(conn, 'HIGH_FRE_VEHICLES', result)
     # # print('总体出行\r\n', dataframe_res_total)
 
     # # 批量计算用
