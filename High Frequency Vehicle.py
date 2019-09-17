@@ -105,7 +105,7 @@ if __name__ == '__main__':
 
     # # 批量计算用
     start_time_list = Start_Time_List('2019-04-29 00:00:00', '2019-08-27 00:00:00')
-    for i in range(start_time_list):
+    for i in range(len(start_time_list)):
         df_holiday_total = High_frequency_vehicles(conn, start_time_list[i])
         result = dataframe_Tolist(df_holiday_total)
         print('week: ', i)
