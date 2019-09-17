@@ -1,9 +1,9 @@
 from jdbc.Connect import get_connection, free
 import datetime
 import pandas as pd
-from jdbc.Start_End_time_list import Week_Period, Get_Holidays_during_Aweek, Add_serval_days
+from jdbc.Start_End_time_list import Week_Period, Get_Holidays_during_Aweek, Add_serval_days, Start_Time_List
 
-
+# # 将一周内的高频车找出并分别统计其工作日和休息日的出行次数
 def High_frequency_vehicles(conn, start_time):
 
     if conn == None: conn = get_connection()    # 建立数据库连接
@@ -55,6 +55,39 @@ def High_frequency_vehicles(conn, start_time):
     df_holiday_total = df_holiday_total[['HPHM','TOTAL_numbers','WORK_numbers','HOLIDAY_numbers','START_DATE','END_DATE']] #提取对应列重构dataframe
     return df_holiday_total
 
+# # 将一周内的高频车查询的dataframe转为list，方便写入oracle
+def dataframe_Tolist(df_holiday_total):
+    HPHM = df_holiday_total['HPHM'].tolist()
+    TOTAL_NUM = df_holiday_total['TOTAL_numbers'].tolist()
+    WORK_NUM = df_holiday_total['WORK_numbers'].tolist()
+    HOLIDAY_NUM = df_holiday_total['HOLIDAY_numbers'].tolist()
+    START_DATE = df_holiday_total['START_DATE'].tolist()
+    END_DATE = df_holiday_total['END_DATE'].tolist()
+
+    A = [HPHM, TOTAL_NUM, WORK_NUM, HOLIDAY_NUM, START_DATE, END_DATE]
+    return list(zip(*A))
+
+# # 写入数据库
+def Insert_db(conn, table_name, result):
+    if conn == None:
+        conn = get_connection()
+    cr = conn.cursor()
+    # print('diaoyong')
+
+    # sql = "INSERT INTO SYS.TRAVEL_TIME_HK93TOHK92(HPHM, HPZL_y, JGSJ_x, JGSJ_y, TRAVEL_TIME, DATE_TYPES) VALUES (:1, :2, :3, :4, :5, :6)"
+    sql = ("INSERT INTO %s(HPHM, TOTAL_NUM, WORK_NUM, HOLIDAY_NUM, START_DATE, END_DATE) VALUES (:1, :2, :3, :4, :5, :6)") % (table_name)
+
+    try:
+        cr.executemany(sql, result)
+        conn.commit()
+        print('insert successfully!')
+    except:
+        conn.rollback()
+
+    # 关闭游标、关闭数据库连接
+    cr.close()
+    conn.close()
+    return 0
 
 
 
@@ -64,11 +97,20 @@ def High_frequency_vehicles(conn, start_time):
 
 if __name__ == '__main__':
     starttime = datetime.datetime.now()  # 统计程序的开始时刻
-    ## 开发测试用
     conn = None
-    df_holiday_total = High_frequency_vehicles(conn,'2019-05-01 00:00:00')
-    print('整合表\r\n',df_holiday_total)
-    # print('总体出行\r\n', dataframe_res_total)
+    # # 开发测试用
+    # df_holiday_total = High_frequency_vehicles(conn,'2019-05-01 00:00:00')
+    # print('整合表\r\n',df_holiday_total)
+    # # print('总体出行\r\n', dataframe_res_total)
+
+    # # 批量计算用
+    start_time_list = Start_Time_List('2019-04-29 00:00:00', '2019-08-27 00:00:00')
+    for i in range(start_time_list):
+        df_holiday_total = High_frequency_vehicles(conn, start_time_list[i])
+        result = dataframe_Tolist(df_holiday_total)
+        print('week: ', i)
+        Insert_db(conn, 'HIGH_FRE_VEHICLES', result)
+
 
     endtime = datetime.datetime.now()
     print("the program runs : %d s" % (endtime - starttime).seconds)

@@ -1,8 +1,9 @@
-import datetime
+import datetime, math
 from jdbc.Convert_strTo_time_then_str import Convert_strTo_time_then_str
 from jdbc.holiday import holiday
 
 
+# 用于旅行时间计算Travel_time.py生成起始时间和终止时间
 # 返回2个二维数组，list中的每个元素示例：
 # start:['2019-05-02 16:00:00', '2019-05-02 15:50:00']; end:  ['2019-05-02 18:00:00', '2019-05-02 18:10:00']
 def Start_End_time_list(start_time,date_length): # 输入start_time格式为'2019-05-02 16:00:00'；date_length为整型，表示时间跨度
@@ -52,14 +53,32 @@ def Get_Holidays_during_Aweek(start_time): # 输入一个时间，返回该周�
 
     return holidays_list
 
+# 输入起始日期和截止日期的时间，生成每周一的起始时间列表，用于High Frequency Vehicle.py的输入
+def Start_Time_List(start_time, end_time):
+    start_day = start_time[:10]
+    end_day = end_time[:10]
+    start_day = datetime.datetime.strptime(start_day, '%Y-%m-%d')
+    end_day = datetime.datetime.strptime(end_day, '%Y-%m-%d')
+    period = (end_day-start_day).days
+    weeks = math.ceil(1.0*period/7)
+    st_week_day = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S").weekday()
+    if st_week_day != 0:
+        start_time = Convert_strTo_time_then_str(start_time, -1440*st_week_day)
+    start_time_list = []
+    for i in range(weeks):
+        start_time_list.append(Add_serval_days(start_time, i*7))
+
+    return start_time_list
 
 
 
 
 
 if __name__ == '__main__':
-    week_period = Week_Period('2019-05-01 00:00:00')
-    print(week_period)
+    # week_period = Week_Period('2019-05-01 00:00:00')
+    # print(week_period)
+    #
+    # holiday_list = Get_Holidays_during_Aweek('2019-05-01 00:00:00')
+    # print(holiday_list)
+    print(Start_Time_List('2019-04-29 00:00:00', '2019-08-27 00:00:00'))
 
-    holiday_list = Get_Holidays_during_Aweek('2019-05-01 00:00:00')
-    print(holiday_list)

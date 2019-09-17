@@ -36,3 +36,16 @@ create table TRAVEL_TIME_HK93TOHK92
   TRAVEL_TIME     NUMBER(*,0),
   DATE_TYPES      NUMBER(*,0)
 )
+
+
+%% 高频车计算结果表（HIGH_FRE_VEHICLES）
+
+create table HIGH_FRE_VEHICLES
+(
+  HPHM          VARCHAR2(15),
+  TOTAL_NUM         NUMBER(*,0),
+  WORK_NUM          NUMBER(*,0),
+  HOLIDAY_NUM       NUMBER(*,0),
+  START_DATE        DATE not null,
+  END_DATE          DATE not null
+)
