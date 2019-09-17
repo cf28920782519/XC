@@ -42,9 +42,19 @@ def High_frequency_vehicles(conn, start_time):
     # print(df_holiday_total_tem)
     df_holiday_total = df_holiday_total_tem.groupby('HPHM').sum().reset_index()    # 按HPHM列的内容，进行表内整合，对其他列执行求和的操作
     df_holiday_total['WORK_numbers'] = df_holiday_total['TOTAL_numbers'].sub(df_holiday_total['HOLIDAY_numbers'])   # TOTAL_numbers列减去HOLIDAY_numbers列，赋值给新增的WORK_numbers列
+    df_holiday_total['START_DATE'] = query_time_interval[0][:10]    # 新增一列用于表征计算起始的日期
+    df_holiday_total['END_DATE'] = query_time_interval[1][:10]  # 新增一列用于表征统计截止的日期（不包括当天）
 
+    # 通过上述流程，将同一周内出行的车牌及工作日、休息日出行次数统计完成
+    # 下面将统计、筛选高频车（一周内出行5次以上，工作日出行3次以上的作为高频车）
+    df_holiday_total = df_holiday_total.drop(index=(df_holiday_total.loc[df_holiday_total['TOTAL_numbers']<5].index))
+    df_holiday_total = df_holiday_total.drop(
+        index=(df_holiday_total.loc[df_holiday_total['WORK_numbers'] < 3].index)).reset_index() # 删去工作日出行次数小于3次的
+    df_holiday_total = df_holiday_total.drop(
+        index=(df_holiday_total.loc[df_holiday_total['HPHM'] == '车牌'].index)).reset_index() # 删去车牌识别失败的行
+    df_holiday_total = df_holiday_total[['HPHM','TOTAL_numbers','WORK_numbers','HOLIDAY_numbers','START_DATE','END_DATE']] #提取对应列重构dataframe
     return df_holiday_total
-    # return df_holiday, dataframe_res_total
+
 
 
 
