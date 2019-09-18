@@ -88,27 +88,27 @@ if __name__ == '__main__':
     # result = dataframe_Tolist(query_res)
     # Insert_db(conn, result)
     ## 跑批量数据用的
-    start_time_list, end_time_list = Start_End_time_list('2019-05-01 16:00:00', 118)
+    start_time_list, end_time_list = Start_End_time_list('2019-05-01 06:30:00', 118)
     for i in range(len(start_time_list)):
         conn = None
         # query_res = plate_match(conn, ['HK-92', 'HK-107'],[('1','2','3'), ('1','2')], start_time_list[i], end_time_list[i])   # 起：HK-107；终：HK-92。跑该子段时取消注释
-        # query_res = plate_match(conn, ['HK-93', 'HK-107'], [('7', '8', '9'), ('3', '4')], start_time_list[i],
-        #                         end_time_list[i])     # 起：HK-107；终：HK-93。跑该子段时取消注释
+        query_res = plate_match(conn, ['HK-93', 'HK-107'], [('7', '8', '9'), ('3', '4')], start_time_list[i],
+                                end_time_list[i])     # 起：HK-107；终：HK-93。跑该子段时取消注释
 
         # query_res = plate_match(conn, ['HK-107', 'HK-93'], [('1', '2'), ('1','2','3','4','5','6','10','11','12')], start_time_list[i],
         #                         end_time_list[i])   # 起：HK-93；终：HK-107。跑该子段时取消注释
 
-        query_res = plate_match(conn, ['HK-107', 'HK-92'], [('3', '4'), ('4','5','6','7','8','9','10')], start_time_list[i],
-                                end_time_list[i])   # 起：HK-92；终：HK-107。跑该子段时取消注释
+        # query_res = plate_match(conn, ['HK-107', 'HK-92'], [('3', '4'), ('4','5','6','7','8','9','10')], start_time_list[i],
+        #                         end_time_list[i])   # 起：HK-92；终：HK-107。跑该子段时取消注释
         # print(query_res)
         result = dataframe_Tolist(query_res)
         # print(result)
         # print(len(result))
         print('day: ', i)
         # Insert_db(conn, 'TRAVEL_TIME_HK107TOHK92', result)    # 起：HK-107；终：HK-92。跑该子段时取消注释
-        # Insert_db(conn, 'TRAVEL_TIME_HK107TOHK93', result)      # 起：HK-107；终：HK-93。跑该子段时取消注释
+        Insert_db(conn, 'TRAVEL_TIME_HK107TOHK93', result)      # 起：HK-107；终：HK-93。跑该子段时取消注释
         # Insert_db(conn, 'TRAVEL_TIME_HK93TOHK107', result)      # 起：HK-93；终：HK-107。跑该子段时取消注释
-        Insert_db(conn, 'TRAVEL_TIME_HK92TOHK107', result)  # 起：HK-92；终：HK-107。跑该子段时取消注释
+        # Insert_db(conn, 'TRAVEL_TIME_HK92TOHK107', result)  # 起：HK-92；终：HK-107。跑该子段时取消注释
 
     endtime = datetime.datetime.now()
     print("the program runs : %d s" % (endtime - starttime).seconds)
