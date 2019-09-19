@@ -14,8 +14,8 @@ def Start_End_time_list(start_time,date_length): # 输入start_time格式为'201
         st2 = Convert_strTo_time_then_str(start_time, -10+i*1440)
         lis1 = [st1, st2]
         start_time_list.append(lis1)
-        ed1 = Convert_strTo_time_then_str(start_time, 90+i*1440)
-        ed2 = Convert_strTo_time_then_str(start_time, 100+i*1440)
+        ed1 = Convert_strTo_time_then_str(start_time, 120+i*1440)
+        ed2 = Convert_strTo_time_then_str(start_time, 130+i*1440)
         lis2 = [ed1, ed2]
         end_time_list.append(lis2)
     return start_time_list, end_time_list

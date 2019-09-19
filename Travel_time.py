@@ -88,7 +88,7 @@ if __name__ == '__main__':
     # result = dataframe_Tolist(query_res)
     # Insert_db(conn, result)
     ## 跑批量数据用的
-    start_time_list, end_time_list = Start_End_time_list('2019-05-01 06:30:00', 118)
+    start_time_list, end_time_list = Start_End_time_list('2019-05-01 16:00:00', 118)
     for i in range(len(start_time_list)):
         conn = None
 
