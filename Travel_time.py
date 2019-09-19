@@ -91,6 +91,8 @@ if __name__ == '__main__':
     start_time_list, end_time_list = Start_End_time_list('2019-05-01 06:30:00', 118)
     for i in range(len(start_time_list)):
         conn = None
+
+        # # 下面是包含路中卡口的4个子路段
         # query_res = plate_match(conn, ['HK-92', 'HK-107'],[('1','2','3'), ('1','2')], start_time_list[i], end_time_list[i])   # 起：HK-107；终：HK-92。跑该子段时取消注释
         # query_res = plate_match(conn, ['HK-93', 'HK-107'], [('7', '8', '9'), ('3', '4')], start_time_list[i],
         #                         end_time_list[i])     # 起：HK-107；终：HK-93。跑该子段时取消注释
@@ -101,18 +103,26 @@ if __name__ == '__main__':
         # query_res = plate_match(conn, ['HK-107', 'HK-92'], [('3', '4'), ('4','5','6','7','8','9','10')], start_time_list[i],
         #                         end_time_list[i])   # 起：HK-92；终：HK-107。跑该子段时取消注释
 
+        # # 下面是不包含路中卡口的路段2个方向
         # query_res = plate_match(conn, ['HK-92', 'HK-93'], [('1', '2', '3'), ('1','2','3','4','5','6','10','11','12')], start_time_list[i],
         #                         end_time_list[i])   # 起：HK-93；终：HK-92。跑该子段时取消注释
+
+        query_res = plate_match(conn, ['HK-93', 'HK-92'], [('7', '8', '9'), ('4', '5', '6', '7', '8', '9', '10')], start_time_list[i],
+                                end_time_list[i])   # 起：HK-93；终：HK-92。跑该子段时取消注释
         # print(query_res)
         result = dataframe_Tolist(query_res)
         # print(result)
         # print(len(result))
         print('day: ', i)
+        # # 下面是包含路中卡口的4个子路段
         # Insert_db(conn, 'TRAVEL_TIME_HK107TOHK92', result)    # 起：HK-107；终：HK-92。跑该子段时取消注释
         # Insert_db(conn, 'TRAVEL_TIME_HK107TOHK93', result)      # 起：HK-107；终：HK-93。跑该子段时取消注释
         # Insert_db(conn, 'TRAVEL_TIME_HK93TOHK107', result)      # 起：HK-93；终：HK-107。跑该子段时取消注释
         # Insert_db(conn, 'TRAVEL_TIME_HK92TOHK107', result)  # 起：HK-92；终：HK-107。跑该子段时取消注释
+
+        # # 下面是不包含路中卡口的路段2个方向
         # Insert_db(conn, 'TRAVEL_TIME_HK93TOHK92', result)  # 起：HK-93；终：HK-92。跑该子段时取消注释
+        Insert_db(conn, 'TRAVEL_TIME_HK92TOHK93', result)  # 起：HK-92；终：HK-93。跑该子段时取消注释
 
     endtime = datetime.datetime.now()
     print("the program runs : %d s" % (endtime - starttime).seconds)
