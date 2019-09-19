@@ -1,4 +1,4 @@
-from jdbc.Connect import get_connection, free
+from jdbc.Connect import get_connection
 import datetime
 import pandas as pd
 from jdbc.Start_End_time_list import Week_Period, Get_Holidays_during_Aweek, Add_serval_days, Start_Time_List
