@@ -60,20 +60,71 @@ def Send_to_school_plates(df_res_c1):
     # print(SEND_KIDS)
     return df_res_c2
 
+# # 查询单辆车在下午放学期间最经常出现的旅行时间
+def Query_Afternoon_Travel_Time(conn, HPHM):
+    if conn == None: conn = get_connection()    # 建立数据库连接
+    cr = conn.cursor()  # 生成连接的游标
+
+    # 同时查6个表中的平均旅行时间和样本数（晚上放学期间）
+    query_sql = ("SELECT AVG(TRAVEL_TIME),COUNT(TRAVEL_TIME) FROM TRAVEL_TIME_HK107TOHK92 WHERE HPHM='%s' AND TO_CHAR(JGSJ_x,'HH24:MI') BETWEEN '16:30' AND '18:00'"
+                 "UNION SELECT AVG(TRAVEL_TIME),COUNT(TRAVEL_TIME) FROM TRAVEL_TIME_HK107TOHK93 WHERE HPHM='%s' AND TO_CHAR(JGSJ_x,'HH24:MI') BETWEEN '16:30' AND '18:00'"
+                 "UNION SELECT AVG(TRAVEL_TIME),COUNT(TRAVEL_TIME) FROM TRAVEL_TIME_HK92TOHK107 WHERE HPHM='%s' AND TO_CHAR(JGSJ_x,'HH24:MI') BETWEEN '16:30' AND '18:00'"
+                 "UNION SELECT AVG(TRAVEL_TIME),COUNT(TRAVEL_TIME) FROM TRAVEL_TIME_HK92TOHK93 WHERE HPHM='%s' AND TO_CHAR(JGSJ_x,'HH24:MI') BETWEEN '16:30' AND '18:00'"
+                 "UNION SELECT AVG(TRAVEL_TIME),COUNT(TRAVEL_TIME) FROM TRAVEL_TIME_HK93TOHK92 WHERE HPHM='%s' AND TO_CHAR(JGSJ_x,'HH24:MI') BETWEEN '16:30' AND '18:00'"
+                 "UNION SELECT AVG(TRAVEL_TIME),COUNT(TRAVEL_TIME) FROM TRAVEL_TIME_HK93TOHK107 WHERE HPHM='%s' AND TO_CHAR(JGSJ_x,'HH24:MI') BETWEEN '16:30' AND '18:00'")\
+                % (HPHM, HPHM, HPHM, HPHM, HPHM, HPHM)
+
+    cr.execute(query_sql)
+    query_res = cr.fetchall()
+    dataframe_res = pd.DataFrame(list(query_res), columns=['AVG_T', 'SAM_NUM']) # 查询结果转为dataframe格式
+    dataframe_res = dataframe_res.sort_values(by=['SAM_NUM'], ascending=False).reset_index()    # 将查询结果按样本数量降序排列
+    dataframe_res = dataframe_res[['AVG_T', 'SAM_NUM']] # 仅提取'AVG_T', 'SAM_NUM'列
+    print(dataframe_res)
+    travel_time, sample_numbers = dataframe_res['AVG_T'][0], dataframe_res['SAM_NUM'].sum()    # 将dataframe中的第一行，赋值给travel_time和sample_numbers
+
+    return travel_time, sample_numbers
+
+# # 条件3：统计给定车牌列表（dataframe）的车辆，下午放学期间的路段旅行时间
+def Pick_Up_Kids():
+    df_res_c2 = pd.read_csv('D:/Result2.csv')
+    HPHM = df_res_c2['HPHM'].tolist()
+    TRAVEL_TIME_LIST = []
+    SAMPLE_LIST = []
+    for i in range(len(HPHM)):
+        travel_time, sample_numbers = Query_Afternoon_Travel_Time(conn, HPHM[i])
+        TRAVEL_TIME_LIST.append(travel_time)
+        SAMPLE_LIST.append(sample_numbers)
+
+    DATA = {"HPHM": HPHM, "TRAVEL_TIME": TRAVEL_TIME_LIST, "SAMPLE_NUM": SAMPLE_LIST}
+    df_res_c3 = pd.DataFrame(DATA,columns=['HPHM', 'TRAVEL_TIME', 'SAMPLE_NUM'])
+    df_res_c3 = df_res_c3.sort_values(by=['TRAVEL_TIME'], ascending=False).reset_index()
+    df_res_c3 = df_res_c3[['HPHM', 'TRAVEL_TIME', 'SAMPLE_NUM']]
+
+    return df_res_c3
+
+
+
 
 
 if __name__ == '__main__':
     starttime = datetime.datetime.now()  # 统计程序的开始时刻
 
     conn = None
-    df_res_c1 = Work_day_frequency_vehicles(conn)
+    # df_res_c1 = Work_day_frequency_vehicles(conn)
     # print(df_res_c1)
 
-    df_res_c2 = Send_to_school_plates(df_res_c1)
-    print(df_res_c2)
-    df_res_c2.to_csv('D:/Result3.csv')
+    # df_res_c2 = Send_to_school_plates(df_res_c1)
+    # print(df_res_c2)
+    # df_res_c2.to_csv('D:/Result3.csv')
     # print(df_res)
     # print(Query_Morning_Travel_NUM(conn, '皖PWA816'))
+
+    # travel_time, sample_numbers = Query_Afternoon_Travel_Time(conn, '皖PN0919')
+    # print(travel_time, sample_numbers)
+    # print(type(travel_time),type(sample_numbers))
+    df_res_c3 = Pick_Up_Kids()
+    print(df_res_c3)
+    df_res_c3.to_csv('D:/Result3.csv')
 
     endtime = datetime.datetime.now()
     print("the program runs : %d s" % (endtime - starttime).seconds)
