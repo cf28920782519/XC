@@ -60,7 +60,7 @@ def Send_to_school_plates(df_res_c1):
     # print(SEND_KIDS)
     return df_res_c2
 
-# # 查询单辆车在下午放学期间最经常出现的旅行时间
+# # 查询单辆车在下午放学期间最经常出现的旅行时间（6个子路段中，样本数最多的子路段的平均旅行时间）
 def Query_Afternoon_Travel_Time(conn, HPHM):
     if conn == None: conn = get_connection()    # 建立数据库连接
     cr = conn.cursor()  # 生成连接的游标
@@ -80,25 +80,28 @@ def Query_Afternoon_Travel_Time(conn, HPHM):
     dataframe_res = dataframe_res.sort_values(by=['SAM_NUM'], ascending=False).reset_index()    # 将查询结果按样本数量降序排列
     dataframe_res = dataframe_res[['AVG_T', 'SAM_NUM']] # 仅提取'AVG_T', 'SAM_NUM'列
     print(dataframe_res)
-    travel_time, sample_numbers = dataframe_res['AVG_T'][0], dataframe_res['SAM_NUM'].sum()    # 将dataframe中的第一行，赋值给travel_time和sample_numbers
-
+    # 统计对应车牌在6个子路段上的总样本数时，取消下面代码注释
+    travel_time, sample_numbers = dataframe_res['AVG_T'][0], dataframe_res['SAM_NUM'].sum()    # 将dataframe中的第一行，赋值给travel_time和sample_numbers（样本数是指该车牌在6个子路段上的总共样本数）
+    # 统计用于计算平均旅行时间的样本数，取消下面代码注释
+    # travel_time, sample_numbers = dataframe_res['AVG_T'][0], dataframe_res['SAM_NUM'][0]    # 当需要统计：用于计算平均旅行时间的样本数时取消注释
     return travel_time, sample_numbers
 
 # # 条件3：统计给定车牌列表（dataframe）的车辆，下午放学期间的路段旅行时间
-def Pick_Up_Kids():
-    df_res_c2 = pd.read_csv('D:/Result2.csv')
-    HPHM = df_res_c2['HPHM'].tolist()
-    TRAVEL_TIME_LIST = []
-    SAMPLE_LIST = []
+def Pick_Up_Kids(df_res_c2):
+    # df_res_c2 = pd.read_csv('D:/Result2.csv')
+    HPHM = df_res_c2['HPHM'].tolist()   # 将输入的dataframe里面的HPHM列转为列表
+    TRAVEL_TIME_LIST = []   # 保存平均旅行时间
+    SAMPLE_LIST = []    # 保存样本个数（可修改Query_Afternoon_Travel_Time的倒数第二行，实现总体样本和用于计算平均旅行时间样本数的切换）
+    # 统计下午放学期间，高频车的平均路段旅行时间，选取的是样本个数最多的子路段上的平均旅行时间
     for i in range(len(HPHM)):
-        travel_time, sample_numbers = Query_Afternoon_Travel_Time(conn, HPHM[i])
+        travel_time, sample_numbers = Query_Afternoon_Travel_Time(conn, HPHM[i])    # 统计结果赋值给travel_time, sample_numbers
         TRAVEL_TIME_LIST.append(travel_time)
         SAMPLE_LIST.append(sample_numbers)
 
-    DATA = {"HPHM": HPHM, "TRAVEL_TIME": TRAVEL_TIME_LIST, "SAMPLE_NUM": SAMPLE_LIST}
-    df_res_c3 = pd.DataFrame(DATA,columns=['HPHM', 'TRAVEL_TIME', 'SAMPLE_NUM'])
-    df_res_c3 = df_res_c3.sort_values(by=['TRAVEL_TIME'], ascending=False).reset_index()
-    df_res_c3 = df_res_c3[['HPHM', 'TRAVEL_TIME', 'SAMPLE_NUM']]
+    DATA = {"HPHM": HPHM, "TRAVEL_TIME": TRAVEL_TIME_LIST, "SAMPLE_NUM": SAMPLE_LIST}   # 将上面3个list转为字典
+    df_res_c3 = pd.DataFrame(DATA,columns=['HPHM', 'TRAVEL_TIME', 'SAMPLE_NUM'])    # 转为dataframe
+    df_res_c3 = df_res_c3.sort_values(by=['TRAVEL_TIME'], ascending=False).reset_index()    # 按平均旅行时间降序排列并重置索引
+    df_res_c3 = df_res_c3[['HPHM', 'TRAVEL_TIME', 'SAMPLE_NUM']]    # 提取'HPHM', 'TRAVEL_TIME', 'SAMPLE_NUM'构成dataframe
 
     return df_res_c3
 
@@ -110,7 +113,7 @@ if __name__ == '__main__':
     starttime = datetime.datetime.now()  # 统计程序的开始时刻
 
     conn = None
-    # df_res_c1 = Work_day_frequency_vehicles(conn)
+    df_res_c1 = Work_day_frequency_vehicles(conn)
     # print(df_res_c1)
 
     # df_res_c2 = Send_to_school_plates(df_res_c1)
@@ -122,9 +125,9 @@ if __name__ == '__main__':
     # travel_time, sample_numbers = Query_Afternoon_Travel_Time(conn, '皖PN0919')
     # print(travel_time, sample_numbers)
     # print(type(travel_time),type(sample_numbers))
-    df_res_c3 = Pick_Up_Kids()
+    df_res_c3 = Pick_Up_Kids(df_res_c1)
     print(df_res_c3)
-    df_res_c3.to_csv('D:/Result3.csv')
+    df_res_c3.to_csv('D:/Result_all_vehicles.csv')
 
     endtime = datetime.datetime.now()
     print("the program runs : %d s" % (endtime - starttime).seconds)
