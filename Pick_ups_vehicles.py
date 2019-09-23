@@ -79,7 +79,7 @@ def Query_Afternoon_Travel_Time(conn, HPHM):
     dataframe_res = pd.DataFrame(list(query_res), columns=['AVG_T', 'SAM_NUM']) # 查询结果转为dataframe格式
     dataframe_res = dataframe_res.sort_values(by=['SAM_NUM'], ascending=False).reset_index()    # 将查询结果按样本数量降序排列
     dataframe_res = dataframe_res[['AVG_T', 'SAM_NUM']] # 仅提取'AVG_T', 'SAM_NUM'列
-    print(dataframe_res)
+    # print(dataframe_res)
     # # 统计对应车牌在6个子路段上的总样本数时，取消下面代码注释
     # travel_time, sample_numbers = dataframe_res['AVG_T'][0], dataframe_res['SAM_NUM'].sum()    # 将dataframe中的第一行，赋值给travel_time和sample_numbers（样本数是指该车牌在6个子路段上的总共样本数）
     # # 统计用于计算平均旅行时间的样本数(SAM_NUM)，对应车牌在6个子路段上的总样本数(TOTAL_NUM)
