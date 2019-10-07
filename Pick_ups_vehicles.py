@@ -129,7 +129,7 @@ if __name__ == '__main__':
     # print(type(travel_time),type(sample_numbers))
     df_res_c3 = Pick_Up_Kids(df_res_c1)
     print(df_res_c3)
-    df_res_c3.to_csv('D:/Result_all_vehicles.csv')
+    df_res_c3.to_csv('D:/Result_all_vehicles_contain_Sep.csv')
 
     endtime = datetime.datetime.now()
     print("the program runs : %d s" % (endtime - starttime).seconds)

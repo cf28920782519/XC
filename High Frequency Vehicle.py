@@ -113,7 +113,7 @@ if __name__ == '__main__':
     # # print('总体出行\r\n', dataframe_res_total)
 
     # # 批量计算用
-    start_time_list = Start_Time_List('2019-04-29 00:00:00', '2019-08-27 00:00:00')
+    start_time_list = Start_Time_List('2019-09-02 00:00:00', '2019-09-23 00:00:00')
     for i in range(len(start_time_list)):
         df_holiday_total = High_frequency_vehicles(conn, start_time_list[i])
         result = dataframe_Tolist(df_holiday_total)
