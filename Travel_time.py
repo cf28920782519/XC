@@ -3,6 +3,7 @@ import datetime
 import pandas as pd
 from jdbc.holiday import holiday
 from jdbc.Start_End_time_list import Start_End_time_list
+import numpy as np
 
 def plate_match(conn, SSID, CDBH, start_time, end_time):
     # SSID=['HK-92','HK-107','HK-93'] [终点，起点], start_time是一个list，形式为：['2019-7-2 17:00:00', '2019-7-2 16:00:00']
@@ -32,7 +33,8 @@ def plate_match(conn, SSID, CDBH, start_time, end_time):
     merge_ls = merge_ls.drop(index=(merge_ls.loc[(merge_ls['HPHM'] == '车牌')].index)).reset_index()   # 删除hphm列中，值为车牌的行
     merge_ls = merge_ls.drop(index=(merge_ls.loc[merge_ls['JGSJ_x'] < merge_ls['JGSJ_y']].index)).reset_index() # 如果下游检测时间小于上游检测时间，说明匹配错误
     merge_ls['travel_time'] = merge_ls['JGSJ_x'].sub(merge_ls['JGSJ_y'])    # jgsj_x - jgsj_y，即下游检测时间-上游检测时间
-    merge_ls['travel_time'] = pd.to_numeric(merge_ls['travel_time'].dt.seconds, downcast='integer') # 计算结果从timedelta转为int，以秒为单位
+    # merge_ls['travel_time'] = pd.to_numeric(merge_ls['travel_time'].dt.seconds, downcast='integer') # 计算结果从timedelta转为int，以秒为单位
+    merge_ls['travel_time'] = (merge_ls['travel_time']/ np.timedelta64(1, 's')).astype(int)  # 计算结果从timedelta转为int，以秒为单位
     merge_ls = merge_ls.sort_values(by=['JGSJ_y'], ascending=True)  # 将dataframe按照JGSJ_y的排序
     merge_ls = merge_ls.drop_duplicates('JGSJ_x', 'last', inplace=False)  # 按JGSJ_x，去除该列下面的重复行,删除重复项并保留最后一次出现的项
     merge_ls = merge_ls.drop_duplicates('JGSJ_y', 'last', inplace=False)  # 按JGSJ_y，去除该列下面的重复行,删除重复项并保留最后一次出现的项
