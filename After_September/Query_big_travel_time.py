@@ -1,12 +1,13 @@
 from Connect import get_connection, free
 import pandas as pd
-
+# 查询大于300s的旅行时间（输入车牌列表，该列表为确认上下学期间出现在路段上的车辆车牌列表；查询开始时间date='2019-09-01'开学之后）
 def query_big_travel_time(conn, HPHM_during_school_period, date):
     if conn == None: conn = get_connection()
     cr = conn.cursor()  # 生成连接的游标
 
     HPHM_with_big_travel_time = []
     for hphm in HPHM_during_school_period:
+        # NVL(MAX(TRAVEL_TIME),0)查询最大的旅行时间，如果旅行时间查询结果为null，则返回0；否则，返回max(travel_time)
         query_sql_1 = ("SELECT NVL(MAX(TRAVEL_TIME),0) from TRAVEL_TIME_HK93TOHK107 WHERE HPHM='%s' "
                        "AND JGSJ_x>= TO_DATE('%s','YYYY-MM-DD')") % (hphm, date)
         cr.execute(query_sql_1)
@@ -22,13 +23,13 @@ def query_big_travel_time(conn, HPHM_during_school_period, date):
         cr.execute(query_sql_3)
         query_res_3 = cr.fetchone()
 
-        query_res = max(query_res_1[0], query_res_2[0], query_res_3[0])
+        query_res = max(query_res_1[0], query_res_2[0], query_res_3[0]) # 取3个表查询到的最大值
         
-        if query_res >= 300:
-            HPHM_with_big_travel_time.append(hphm)
+        if query_res >= 300:    # 最大值是否大于300s
+            HPHM_with_big_travel_time.append(hphm)  # 将车牌号码添加至大旅行时间列表
         else:
-            continue
-    return HPHM_with_big_travel_time
+            continue    # 循环继续
+    return HPHM_with_big_travel_time    # 返回大旅行时间
 
 if __name__ == '__main__':
     conn = None
