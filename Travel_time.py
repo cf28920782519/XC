@@ -90,7 +90,7 @@ if __name__ == '__main__':
     # result = dataframe_Tolist(query_res)
     # Insert_db(conn, result)
     ## 跑批量数据用的
-    start_time_list, end_time_list = Start_End_time_list('2019-09-01 16:00:00', 22)
+    start_time_list, end_time_list = Start_End_time_list('2019-10-08 15:55:00',13)
     for i in range(len(start_time_list)):
         conn = None
 
@@ -110,7 +110,7 @@ if __name__ == '__main__':
         #                         end_time_list[i])   # 起：HK-93；终：HK-92。跑该子段时取消注释
 
         query_res = plate_match(conn, ['HK-93', 'HK-92'], [('7', '8', '9'), ('4', '5', '6', '7', '8', '9', '10')], start_time_list[i],
-                                end_time_list[i])   # 起：HK-93；终：HK-92。跑该子段时取消注释
+                                end_time_list[i])   # 起：HK-92；终：HK-93。跑该子段时取消注释
         # print(query_res)
         result = dataframe_Tolist(query_res)
         # print(result)
