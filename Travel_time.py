@@ -16,7 +16,7 @@ def plate_match(conn, SSID, CDBH, start_time, end_time):
     # 查询路段下游的车牌和经过时间，使用时从下面4个终点里面选择一个取消注释（注释掉其他3个终点）
     query_plate_low = (
                           "SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in %s AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')") % (
-                      SSID[0], CDBH[0], start_time[0], end_time[0])
+                          SSID[0], CDBH[0], start_time[0], end_time[0])
 
     cr.execute(query_plate_low)
     query_res_low = cr.fetchall()
@@ -36,8 +36,8 @@ def plate_match(conn, SSID, CDBH, start_time, end_time):
     merge_ls = merge_ls.drop(index=(merge_ls.loc[(merge_ls['HPHM'] == '车牌')].index)).reset_index()  # 删除hphm列中，值为车牌的行
     merge_ls = merge_ls.drop(
         index=(merge_ls.loc[merge_ls['JGSJ_x'] < merge_ls['JGSJ_y']].index)).reset_index()  # 如果下游检测时间小于上游检测时间，说明匹配错误
-    merge_ls['JGSJ_x'] = pd.to_datetime(merge_ls['JGSJ_x'],format = '%Y-%m-%d %H:%M:%S')
-    merge_ls['JGSJ_y'] = pd.to_datetime(merge_ls['JGSJ_y'], format='%Y-%m-%d %H:%M:%S')
+    merge_ls['JGSJ_x'] = pd.to_datetime(merge_ls['JGSJ_x'], format='%Y-%m-%d %H:%M:%S')  # 将JGSJ_x列转为datetime标准格式
+    merge_ls['JGSJ_y'] = pd.to_datetime(merge_ls['JGSJ_y'], format='%Y-%m-%d %H:%M:%S')  # 将JGSJ_y列转为datetime标准格式
     merge_ls['travel_time'] = merge_ls['JGSJ_x'].sub(merge_ls['JGSJ_y'])  # jgsj_x - jgsj_y，即下游检测时间-上游检测时间
     # merge_ls['travel_time'] = pd.to_numeric(merge_ls['travel_time'].dt.seconds, downcast='integer') # 计算结果从timedelta转为int，以秒为单位
     merge_ls['travel_time'] = (merge_ls['travel_time'] / np.timedelta64(1, 's')).astype(
@@ -111,8 +111,9 @@ if __name__ == '__main__':
         # query_res = plate_match(conn, ['HK-107', 'HK-93'], [('1', '2'), ('1','2','3','4','5','6','10','11','12')], start_time_list[i],
         #                         end_time_list[i])   # 起：HK-93；终：HK-107。跑该子段时取消注释
 
-        query_res = plate_match(conn, ['HK-107', 'HK-92'], [('3', '4'), ('4','5','6','7','8','9','10')], start_time_list[i],
-                                end_time_list[i])   # 起：HK-92；终：HK-107。跑该子段时取消注释
+        query_res = plate_match(conn, ['HK-107', 'HK-92'], [('3', '4'), ('4', '5', '6', '7', '8', '9', '10')],
+                                start_time_list[i],
+                                end_time_list[i])  # 起：HK-92；终：HK-107。跑该子段时取消注释
 
         # # 下面是不包含路中卡口的路段2个方向
         # query_res = plate_match(conn, ['HK-92', 'HK-93'], [('1', '2', '3'), ('1','2','3','4','5','6','10','11','12')], start_time_list[i],
