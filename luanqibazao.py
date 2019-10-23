@@ -1,6 +1,7 @@
 import datetime
 import pandas as pd
 import math
+import numpy as np
 
 def Convert_strTo_time_then_str(start_time,timedelta=0):
     tem = datetime.datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
@@ -57,13 +58,54 @@ def Start_Time_List(start_time, end_time):
 
     return
 
+# 求x和y的最小公倍数
+def lcm(x, y):
+    #  获取最大的数
+    if x > y:
+        greater = x
+    else:
+        greater = y
 
+    while (True):
+        if ((greater % x == 0) and (greater % y == 0)):
+            lcm = greater
+            break
+        greater += 1
+
+    return lcm
+
+def Flow_statistical(ls_query_result, timedelta, step_length):
+    if timedelta > step_length:
+        low_cm = lcm(timedelta, step_length)
+        loop_num = low_cm / step_length
+
+def Round_datetime(date_time):
+    tem = str(date_time)[:-2]+'00'
+    tem = pd.to_datetime(tem, format='%Y-%m-%d %H:%M:%S')
+    return tem
 
 if __name__ == '__main__':
     # print(Convert_strTo_time_then_str('2019-05-02 16:00:00',-10))
     # print(type(Convert_strTo_time_then_str('2019-05-02 16:00:00',-10)))
     # print(Start_End_time_list('2019-05-02 16:00:00',124))
     # Data_Combine()
-    print(Start_Time_List('2019-04-29 00:00:00', '2019-08-27 00:00:00'))
+    # print(Start_Time_List('2019-04-29 00:00:00', '2019-08-27 00:00:00'))
+    ls_query_result = pd.read_csv('D:\\Python_Project\\XC\\query_ls.csv', header=None)
+    ls_query_result[0] = pd.to_datetime(ls_query_result[0], format='%Y-%m-%d %H:%M:%S')
+    ls_list = ls_query_result[0].to_list()
+    ls_result = pd.Series(np.ones(len(ls_list)), index=ls_list)
+    # new_ele = pd.Series(data=[0], index=Round_datetime(ls_result.index[0]))
+    starttime = Round_datetime(ls_result.index[0])
+    ls_result_with_timedelta = ls_result[(ls_result.index >= starttime+datetime.timedelta(minutes=2))]
+    # print(ls_result_with_timedelta)
+    ls_sample = ls_result.resample('5T', base=2).sum()
+    print(ls_sample)
+    # print(ls_result_with_timedelta.resample('5T',).sum())
+    ls_result.loc[starttime] = 0
+    ls_result = ls_result.sort_index()
+    # print(ls_result.resample('5T').sum())
+
+    # print(str(ls_result.index[0])[:-2]+'00')
+    # print(type(Round_datetime(ls_result.index[0])))
 
 
