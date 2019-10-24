@@ -84,28 +84,39 @@ def Round_datetime(date_time):
     tem = pd.to_datetime(tem, format='%Y-%m-%d %H:%M:%S')
     return tem
 
+def trave_time_critical_val(x):
+    travel_critical_val = min(x) + 180
+    x_new = [val for val in x if val <= travel_critical_val]
+    print(x_new)
+    average_travel_time = np.mean(x_new)
+    return average_travel_time
+
 if __name__ == '__main__':
     # print(Convert_strTo_time_then_str('2019-05-02 16:00:00',-10))
     # print(type(Convert_strTo_time_then_str('2019-05-02 16:00:00',-10)))
     # print(Start_End_time_list('2019-05-02 16:00:00',124))
     # Data_Combine()
     # print(Start_Time_List('2019-04-29 00:00:00', '2019-08-27 00:00:00'))
-    ls_query_result = pd.read_csv('D:\\Python_Project\\XC\\query_ls.csv', header=None)
-    ls_query_result[0] = pd.to_datetime(ls_query_result[0], format='%Y-%m-%d %H:%M:%S')
-    ls_list = ls_query_result[0].to_list()
-    ls_result = pd.Series(np.ones(len(ls_list)), index=ls_list)
-    # new_ele = pd.Series(data=[0], index=Round_datetime(ls_result.index[0]))
-    starttime = Round_datetime(ls_result.index[0])
-    ls_result_with_timedelta = ls_result[(ls_result.index >= starttime+datetime.timedelta(minutes=2))]
-    # print(ls_result_with_timedelta)
-    ls_sample = ls_result.resample('5T', base=2).sum()
-    print(ls_sample)
-    # print(ls_result_with_timedelta.resample('5T',).sum())
-    ls_result.loc[starttime] = 0
-    ls_result = ls_result.sort_index()
+    # ls_query_result = pd.read_csv('D:\\Python_Project\\XC\\query_ls.csv', header=None)
+    # ls_query_result[0] = pd.to_datetime(ls_query_result[0], format='%Y-%m-%d %H:%M:%S')
+    # ls_list = ls_query_result[0].to_list()
+    # ls_result = pd.Series(np.ones(len(ls_list)), index=ls_list)
+    # # new_ele = pd.Series(data=[0], index=Round_datetime(ls_result.index[0]))
+    # starttime = Round_datetime(ls_result.index[0])
+    # ls_result_with_timedelta = ls_result[(ls_result.index >= starttime+datetime.timedelta(minutes=2))]
+    # # print(ls_result_with_timedelta)
+    # ls_sample = ls_result.resample('5T', base=2).sum()
+    # print(ls_sample)
+    # # print(ls_result_with_timedelta.resample('5T',).sum())
+    # ls_result.loc[starttime] = 0
+    # ls_result = ls_result.sort_index()
     # print(ls_result.resample('5T').sum())
 
     # print(str(ls_result.index[0])[:-2]+'00')
     # print(type(Round_datetime(ls_result.index[0])))
+    x = [53,54,57,58,59,59,61,62,62,64,65,65,69,70,73,73,74,75,78,81,90,106,111,130,169,202,540]
+    average_val = trave_time_critical_val(x)
+    print(average_val)
+
 
 
