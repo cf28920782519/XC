@@ -80,14 +80,26 @@ def Road_average_speed(query_res_slice_list, end_period_list, road_length):
 if __name__ == '__main__':
     starttime = datetime.datetime.now()  # 统计程序的开始时刻
 
-    query_res = Travel_time_query(None, 'TRAVEL_TIME_HK93TOHK107', '02','2019-10-08 16:00:00', '2019-10-08 18:00:00')
+    # # 跑代码时，注释下面2行中的1行
+    # query_res = Travel_time_query(None, 'TRAVEL_TIME_HK93TOHK107', '02','2019-10-29 16:00:00', '2019-10-29 18:00:00')
+    query_res = Travel_time_query(None, 'TRAVEL_TIME_HK92TOHK107', '02', '2019-10-29 16:00:00', '2019-10-29 18:00:00')
+
     # 统计时间段为5分钟，滑动时间窗的步长为2，仅统计1次；可通过for循环迭代实现每2min统计一次
-    query_res_slice_list, end_period_list = Slice_by_period_timedelta(query_res, 5, 2)
-    road_speed = Road_average_speed(query_res_slice_list, end_period_list, 440) # 指定路段长度为440米
+    query_res_slice_list, end_period_list = Slice_by_period_timedelta(query_res, 5, 0)
+
+    # # 跑代码时，注释下面2行中的1行
+    road_speed = Road_average_speed(query_res_slice_list, end_period_list, 440) # 指定路段长度为440米（HK-93到HK-107）
+    # road_speed = Road_average_speed(query_res_slice_list, end_period_list, 228)  # 指定路段长度为228米（HK-92到HK-107）
     print(road_speed)
+
+    # # 跑代码时，注释下面2行中的1行
+    # road_speed.to_csv('average_speed_1028_HK92TOHK107.csv')
+    road_speed.to_csv('average_speed_1028_HK93TOHK107.csv')
     # query_min_travel_time = query_res.groupby(by='HPZL_Y').resample('5T', base=2, on='JGSJ_X').TRAVEL_TIME.min()
     # print(list(query_min_travel_time['02'].values))
     # print(query_min_travel_time)
+    # print(road_speed[road_speed <= 15])
+    # print(road_speed.apply(lambda x: 2 if x <= 15 else 0).sum())    # 求拥堵时长
 
     endtime = datetime.datetime.now()
     print("the program runs : %d s" % (endtime - starttime).seconds)
