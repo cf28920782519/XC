@@ -75,7 +75,7 @@ def Start_Time_List(start_time, end_time):
 
 
 if __name__ == '__main__':
-    start_time_list, end_time_list = Start_End_time_list('2019-10-28 16:00:00',1)
+    start_time_list, end_time_list = Start_End_time_list('2019-10-01 16:00:00',31)
     print(start_time_list)
     print(end_time_list)
     # week_period = Week_Period('2019-05-01 00:00:00')

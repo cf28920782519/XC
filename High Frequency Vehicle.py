@@ -13,7 +13,7 @@ def High_frequency_vehicles(conn, start_time):
 
     query_time_interval = Week_Period(start_time)   # 根据给定的start_time，生成一个列表，包含该周的起始日期和终止日期
     # 查询车牌号码和经过时间记录数（仅上下学期间）
-    query_sql = ("SELECT HPHM, COUNT(JGSJ) FROM SJCJ_T_CLXX_LS WHERE SSID='HK-107' AND CDBH IN ('1','2','3','4') "
+    query_sql = ("SELECT HPHM, COUNT(JGSJ) FROM SJCJ_T_CLXX_LS_HK107 WHERE SSID='HK-107' AND CDBH IN ('1','2','3','4') "
                  "AND TO_CHAR(JGSJ,'HH24') IN ('06','07','16','17')"
                  " AND JGSJ BETWEEN to_date('%s','yyyy-mm-dd hh24:mi:ss') AND to_date('%s','yyyy-mm-dd hh24:mi:ss') GROUP BY HPHM ") % (query_time_interval[0], query_time_interval[1])
 
@@ -25,7 +25,7 @@ def High_frequency_vehicles(conn, start_time):
 
     holiday_query_list = [] # 将休息日的查询结果转化为dataframe格式，存入该列表
     for i in range(len(holiday_list)):
-        query_sql_for_holiday = ("SELECT HPHM, COUNT(JGSJ) FROM SJCJ_T_CLXX_LS WHERE SSID='HK-107' AND CDBH IN ('1','2','3','4') "
+        query_sql_for_holiday = ("SELECT HPHM, COUNT(JGSJ) FROM SJCJ_T_CLXX_LS_HK107 WHERE SSID='HK-107' AND CDBH IN ('1','2','3','4') "
                  "AND TO_CHAR(JGSJ,'HH24') IN ('06','07','16','17')"
                  " AND JGSJ BETWEEN to_date('%s','yyyy-mm-dd hh24:mi:ss') AND to_date('%s','yyyy-mm-dd hh24:mi:ss') GROUP BY HPHM ") % (holiday_list[i], Add_serval_days(holiday_list[i], 1)) # 查休息日当天的出行情况
         cr.execute(query_sql_for_holiday)   # 执行查询
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     # # print('总体出行\r\n', dataframe_res_total)
 
     # # 批量计算用
-    start_time_list = Start_Time_List('2019-09-02 00:00:00', '2019-09-23 00:00:00')
+    start_time_list = Start_Time_List('2019-05-01 00:00:00', '2019-10-31 00:00:00')
     for i in range(len(start_time_list)):
         df_holiday_total = High_frequency_vehicles(conn, start_time_list[i])
         result = dataframe_Tolist(df_holiday_total)

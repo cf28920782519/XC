@@ -15,7 +15,7 @@ def plate_match(conn, SSID, CDBH, start_time, end_time):
     cr = conn.cursor()  # 生成连接的游标
     # 查询路段下游的车牌和经过时间，使用时从下面4个终点里面选择一个取消注释（注释掉其他3个终点）
     query_plate_low = (
-                          "SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS_OCT WHERE SSID='%s' AND CDBH in %s AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')") % (
+                          "SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS_ERXIAO WHERE SSID='%s' AND CDBH in %s AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')") % (
                           SSID[0], CDBH[0], start_time[0], end_time[0])
 
     cr.execute(query_plate_low)
@@ -25,7 +25,7 @@ def plate_match(conn, SSID, CDBH, start_time, end_time):
     # 查询路段上游的车牌和经过时间
     # query_plate_upper = ("SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in ('1','2','3','4','5','6','10','11','12') AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')")%(SSID[1],start_time[0],end_time[0])
     query_plate_upper = (
-                            "SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS_OCT WHERE SSID='%s' AND CDBH in %s AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')") % (
+                            "SELECT HPHM, HPZL, JGSJ FROM SJCJ_T_CLXX_LS_ERXIAO WHERE SSID='%s' AND CDBH in %s AND JGSJ>=to_date('%s','yyyy-mm-dd hh24:mi:ss') AND JGSJ<=to_date('%s','yyyy-mm-dd hh24:mi:ss')") % (
                             SSID[1], CDBH[1], start_time[0], end_time[0])
     cr.execute(query_plate_upper)
     query_res_upper = cr.fetchall()
@@ -111,17 +111,17 @@ if __name__ == '__main__':
         # query_res = plate_match(conn, ['HK-107', 'HK-93'], [('1', '2'), ('1','2','3','4','5','6','10','11','12')], start_time_list[i],
         #                         end_time_list[i])   # 起：HK-93；终：HK-107。跑该子段时取消注释
 
-        query_res = plate_match(conn, ['HK-107', 'HK-92'], [('3', '4'), ('4', '5', '6', '7', '8', '9', '10')],
-                                start_time_list[i],
-                                end_time_list[i])  # 起：HK-92；终：HK-107。跑该子段时取消注释
+        # query_res = plate_match(conn, ['HK-107', 'HK-92'], [('3', '4'), ('4', '5', '6', '7', '8', '9', '10')],
+        #                         start_time_list[i],
+        #                         end_time_list[i])  # 起：HK-92；终：HK-107。跑该子段时取消注释
 
         # # 下面是不包含路中卡口的路段2个方向
-        # query_res = plate_match(conn, ['HK-92', 'HK-93'], [('1', '2', '3'), ('1','2','3','4','5','6','10','11','12')], start_time_list[i],
-        #                         end_time_list[i])   # 起：HK-93；终：HK-92。跑该子段时取消注释
+        query_res = plate_match(conn, ['HK-1931', 'HK-89'], [('1', '2', '3'), ('7','8','9','10','11')], start_time_list[i],
+                                end_time_list[i])   # 起：HK-89；终：HK-1931。跑该子段时取消注释
 
-        # query_res = plate_match(conn, ['HK-93', 'HK-92'], [('7', '8', '9'), ('4', '5', '6', '7', '8', '9', '10')],
+        # query_res = plate_match(conn, ['HK-89', 'HK-1931'], [('1', '2', '3', '4'), ('4', '5', '7', '8', '9')],
         #                         start_time_list[i],
-        #                         end_time_list[i])  # 起：HK-92；终：HK-93。跑该子段时取消注释
+        #                         end_time_list[i])  # 起：HK-1931；终：HK-89。跑该子段时取消注释
         # print(query_res)
         result = dataframe_Tolist(query_res)
         # print(result)
@@ -131,11 +131,11 @@ if __name__ == '__main__':
         # Insert_db(conn, 'TRAVEL_TIME_HK107TOHK92', result)    # 起：HK-107；终：HK-92。跑该子段时取消注释
         # Insert_db(conn, 'TRAVEL_TIME_HK107TOHK93', result)      # 起：HK-107；终：HK-93。跑该子段时取消注释
         # Insert_db(conn, 'TRAVEL_TIME_HK93TOHK107', result)      # 起：HK-93；终：HK-107。跑该子段时取消注释
-        Insert_db(conn, 'TRAVEL_TIME_HK92TOHK107', result)  # 起：HK-92；终：HK-107。跑该子段时取消注释
+        # Insert_db(conn, 'TRAVEL_TIME_HK92TOHK107', result)  # 起：HK-92；终：HK-107。跑该子段时取消注释
 
         # # 下面是不包含路中卡口的路段2个方向
-        # Insert_db(conn, 'TRAVEL_TIME_HK93TOHK92', result)  # 起：HK-93；终：HK-92。跑该子段时取消注释
-        # Insert_db(conn, 'TRAVEL_TIME_HK92TOHK93', result)  # 起：HK-92；终：HK-93。跑该子段时取消注释
+        Insert_db(conn, 'TRAVEL_TIME_HK89TOHK1931', result)  # 起：HK-89；终：HK-1931。跑该子段时取消注释
+        # Insert_db(conn, 'TRAVEL_TIME_HK1931TOHK89', result)  # 起：HK-1931；终：HK-89。跑该子段时取消注释
 
     endtime = datetime.datetime.now()
     print("the program runs : %d s" % (endtime - starttime).seconds)
