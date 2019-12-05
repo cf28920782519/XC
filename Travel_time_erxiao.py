@@ -116,12 +116,12 @@ if __name__ == '__main__':
         #                         end_time_list[i])  # 起：HK-92；终：HK-107。跑该子段时取消注释
 
         # # 下面是不包含路中卡口的路段2个方向
-        query_res = plate_match(conn, ['HK-1931', 'HK-89'], [('1', '2', '3'), ('7','8','9','10','11')], start_time_list[i],
-                                end_time_list[i])   # 起：HK-89；终：HK-1931。跑该子段时取消注释
+        # query_res = plate_match(conn, ['HK-1931', 'HK-89'], [('1', '2', '3'), ('7','8','9','10','11')], start_time_list[i],
+        #                         end_time_list[i])   # 起：HK-89；终：HK-1931。跑该子段时取消注释
 
-        # query_res = plate_match(conn, ['HK-89', 'HK-1931'], [('1', '2', '3', '4'), ('4', '5', '7', '8', '9')],
-        #                         start_time_list[i],
-        #                         end_time_list[i])  # 起：HK-1931；终：HK-89。跑该子段时取消注释
+        query_res = plate_match(conn, ['HK-89', 'HK-1931'], [('1', '2', '3', '4'), ('4', '5', '7', '8', '9')],
+                                start_time_list[i],
+                                end_time_list[i])  # 起：HK-1931；终：HK-89。跑该子段时取消注释
         # print(query_res)
         result = dataframe_Tolist(query_res)
         # print(result)
@@ -134,8 +134,8 @@ if __name__ == '__main__':
         # Insert_db(conn, 'TRAVEL_TIME_HK92TOHK107', result)  # 起：HK-92；终：HK-107。跑该子段时取消注释
 
         # # 下面是不包含路中卡口的路段2个方向
-        Insert_db(conn, 'TRAVEL_TIME_HK89TOHK1931', result)  # 起：HK-89；终：HK-1931。跑该子段时取消注释
-        # Insert_db(conn, 'TRAVEL_TIME_HK1931TOHK89', result)  # 起：HK-1931；终：HK-89。跑该子段时取消注释
+        # Insert_db(conn, 'TRAVEL_TIME_HK89TOHK1931', result)  # 起：HK-89；终：HK-1931。跑该子段时取消注释
+        Insert_db(conn, 'TRAVEL_TIME_HK1931TOHK89', result)  # 起：HK-1931；终：HK-89。跑该子段时取消注释
 
     endtime = datetime.datetime.now()
     print("the program runs : %d s" % (endtime - starttime).seconds)

@@ -14,8 +14,8 @@ def Start_End_time_list(start_time,date_length): # 输入start_time格式为'201
         st2 = Convert_strTo_time_then_str(start_time, -10+i*1440)
         lis1 = [st1, st2]
         start_time_list.append(lis1)
-        ed1 = Convert_strTo_time_then_str(start_time, 120+i*1440)
-        ed2 = Convert_strTo_time_then_str(start_time, 130+i*1440)
+        ed1 = Convert_strTo_time_then_str(start_time, 150+i*1440)
+        ed2 = Convert_strTo_time_then_str(start_time, 160+i*1440)
         lis2 = [ed1, ed2]
         end_time_list.append(lis2)
     return start_time_list, end_time_list
@@ -75,7 +75,7 @@ def Start_Time_List(start_time, end_time):
 
 
 if __name__ == '__main__':
-    start_time_list, end_time_list = Start_End_time_list('2019-10-01 16:00:00',31)
+    start_time_list, end_time_list = Start_End_time_list('2019-11-04 15:30:00',14)
     print(start_time_list)
     print(end_time_list)
     # week_period = Week_Period('2019-05-01 00:00:00')
