@@ -13,15 +13,15 @@ def High_frequency_vehicles(conn, start_time):
 
     query_time_interval = Week_Period(start_time)   # 根据给定的start_time，生成一个列表，包含该周的起始日期和终止日期
     # 查询车牌号码和经过时间记录数（仅上下学期间）
-    # 计算的终点HK-89方向，下面查询取消注释
-    query_sql = ("SELECT HPHM, COUNT(JGSJ) FROM SJCJ_T_CLXX_LS_OCT WHERE SSID='HK-89' AND CDBH IN ('1','2','3','4') "
-                 "AND TO_CHAR(JGSJ,'HH24') IN ('16','17')"
-                 " AND JGSJ BETWEEN to_date('%s','yyyy-mm-dd hh24:mi:ss') AND to_date('%s','yyyy-mm-dd hh24:mi:ss') GROUP BY HPHM ") % (query_time_interval[0], query_time_interval[1]) # 至状元梅溪方向（终点HK-89）
-    # # 计算的终点HK-1931方向，下面查询取消注释
-    # query_sql = ("SELECT HPHM, COUNT(JGSJ) FROM SJCJ_T_CLXX_LS_OCT WHERE SSID='HK-1931' AND CDBH IN ('1','2','3') "
+    # # 计算的终点HK-89方向，下面查询取消注释
+    # query_sql = ("SELECT HPHM, COUNT(JGSJ) FROM SJCJ_T_CLXX_LS_ERXIAO WHERE SSID='HK-89' AND CDBH IN ('1','2','3','4') "
     #              "AND TO_CHAR(JGSJ,'HH24') IN ('16','17')"
-    #              " AND JGSJ BETWEEN to_date('%s','yyyy-mm-dd hh24:mi:ss') AND to_date('%s','yyyy-mm-dd hh24:mi:ss') GROUP BY HPHM ") % (
-    #             query_time_interval[0], query_time_interval[1])     # 至响山梅溪方向（终点HK-1931）
+    #              " AND JGSJ BETWEEN to_date('%s','yyyy-mm-dd hh24:mi:ss') AND to_date('%s','yyyy-mm-dd hh24:mi:ss') GROUP BY HPHM ") % (query_time_interval[0], query_time_interval[1]) # 至状元梅溪方向（终点HK-89）
+    # 计算的终点HK-1931方向，下面查询取消注释
+    query_sql = ("SELECT HPHM, COUNT(JGSJ) FROM SJCJ_T_CLXX_LS_ERXIAO WHERE SSID='HK-1931' AND CDBH IN ('1','2','3') "
+                 "AND TO_CHAR(JGSJ,'HH24') IN ('16','17')"
+                 " AND JGSJ BETWEEN to_date('%s','yyyy-mm-dd hh24:mi:ss') AND to_date('%s','yyyy-mm-dd hh24:mi:ss') GROUP BY HPHM ") % (
+                query_time_interval[0], query_time_interval[1])     # 至响山梅溪方向（终点HK-1931）
 
     cr.execute(query_sql)   # 执行查询
     query_res_total = cr.fetchall() # 查询结果从游标中提取并赋值给变量query_res_total
@@ -31,9 +31,17 @@ def High_frequency_vehicles(conn, start_time):
 
     holiday_query_list = [] # 将休息日的查询结果转化为dataframe格式，存入该列表
     for i in range(len(holiday_list)):
-        query_sql_for_holiday = ("SELECT HPHM, COUNT(JGSJ) FROM SJCJ_T_CLXX_LS_OCT WHERE SSID='HK-107' AND CDBH IN ('1','2','3','4') "
-                 "AND TO_CHAR(JGSJ,'HH24') IN ('16','17')"
-                 " AND JGSJ BETWEEN to_date('%s','yyyy-mm-dd hh24:mi:ss') AND to_date('%s','yyyy-mm-dd hh24:mi:ss') GROUP BY HPHM ") % (holiday_list[i], Add_serval_days(holiday_list[i], 1)) # 查休息日当天的出行情况
+        # # 计算的终点HK-89方向，下面查询取消注释
+        # query_sql_for_holiday = ("SELECT HPHM, COUNT(JGSJ) FROM SJCJ_T_CLXX_LS_ERXIAO WHERE SSID='HK-89' AND CDBH IN ('1','2','3','4') "
+        #          "AND TO_CHAR(JGSJ,'HH24') IN ('16','17')"
+        #          " AND JGSJ BETWEEN to_date('%s','yyyy-mm-dd hh24:mi:ss') AND to_date('%s','yyyy-mm-dd hh24:mi:ss') GROUP BY HPHM ") % (holiday_list[i], Add_serval_days(holiday_list[i], 1)) # 查休息日当天的出行情况
+        # 计算的终点HK-1931方向，下面查询取消注释
+        query_sql_for_holiday = (
+                                    "SELECT HPHM, COUNT(JGSJ) FROM SJCJ_T_CLXX_LS_ERXIAO WHERE SSID='HK-1931' AND CDBH IN ('1','2','3') "
+                                    "AND TO_CHAR(JGSJ,'HH24') IN ('16','17')"
+                                    " AND JGSJ BETWEEN to_date('%s','yyyy-mm-dd hh24:mi:ss') AND to_date('%s','yyyy-mm-dd hh24:mi:ss') GROUP BY HPHM ") % (
+                                holiday_list[i], Add_serval_days(holiday_list[i], 1))  # 查休息日当天的出行情况
+
         cr.execute(query_sql_for_holiday)   # 执行查询
         query_res_holiday = cr.fetchall()   # 查询结果提取
         To_dataframe = pd.DataFrame(list(query_res_holiday),columns=['HPHM', 'HOLIDAY_numbers'])   # 转为dataframe
