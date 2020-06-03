@@ -1,0 +1,172 @@
+import pandas as pd
+import numpy as np
+import sys
+import datetime
+
+
+sys.path.append("D:\\Python\\Python_Project\\XC\\jdbc")
+from jdbc.Connect import get_connection, free, get_connection_oracle
+from jdbc.Holiday import holiday
+from jdbc.Start_End_time_list import Start_End_time_list
+
+pd.set_option('display.max_columns', 1000)
+pd.set_option('display.width', 1000)
+pd.set_option('display.max_colwidth', 1000)
+
+
+# SSID = [起点,终点] eg: ['HK-93','HK-92']
+# CDBH = [起点SSID的车道编号元组, 终点SSID的车道编号元组] eg: [('1', '2', '3', '4', '5', '6', '10', '11', '12'), ('1', '2', '3')]
+def plate_match(conn, SSID, CDBH, start_time, end_time):
+    date_types = holiday(start_time[0][0:10])
+    start_ssid, end_ssid = SSID[0], SSID[1]
+    start_cdbh, end_cdbh = CDBH[0], CDBH[1]
+
+    if conn == None:
+        conn = get_connection()  # 建立数据库连接
+
+    cr = conn.cursor()  # 生成连接的游标
+    # 查询路段上游的车牌和经过时间
+    query_plate_upper = (
+                            "SELECT HPHM, HPZL, JGSJ, CDBH FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in %s AND JGSJ BETWEEN '%s' AND '%s'") % (
+                            start_ssid, start_cdbh, start_time[0], end_time[0])
+    cr.execute(query_plate_upper)
+    query_res_upper = cr.fetchall()
+    dataframe_res_upper = pd.DataFrame(list(query_res_upper), columns=['HPHM', 'HPZL', 'JGSJ', 'CDBH'])
+    # 查询路段下游的车牌和经过时间
+    query_plate_low = (
+                          "SELECT HPHM, HPZL, JGSJ, CDBH FROM SJCJ_T_CLXX_LS WHERE SSID='%s' AND CDBH in %s AND JGSJ BETWEEN '%s' AND '%s'") % (
+                          end_ssid, end_cdbh, start_time[0], end_time[0])
+    cr.execute(query_plate_low)
+    query_res_low = cr.fetchall()
+    dataframe_res_low = pd.DataFrame(list(query_res_low), columns=['HPHM', 'HPZL', 'JGSJ', 'CDBH'])
+
+    # 上下游匹配并计算路段旅行时间,merge之后jgsj自动分成2列:jgsj_x（下游）和jgsj_y（上游）
+    merge_ls = pd.merge(dataframe_res_low, dataframe_res_upper, on='HPHM')
+    # print(merge_ls)
+    merge_ls = merge_ls.drop(index=(merge_ls.loc[(merge_ls['HPHM'] == '车牌')].index)).reset_index()  # 删除hphm列中，值为车牌的行
+    merge_ls = merge_ls.drop(
+        index=(merge_ls.loc[merge_ls['JGSJ_x'] < merge_ls['JGSJ_y']].index)).reset_index()  # 如果下游检测时间小于上游检测时间，说明匹配错误
+    merge_ls['JGSJ_x'] = pd.to_datetime(merge_ls['JGSJ_x'], format='%Y-%m-%d %H:%M:%S')  # 将JGSJ_x列转为datetime标准格式
+    merge_ls['JGSJ_y'] = pd.to_datetime(merge_ls['JGSJ_y'], format='%Y-%m-%d %H:%M:%S')  # 将JGSJ_y列转为datetime标准格式
+    merge_ls['travel_time'] = merge_ls['JGSJ_x'].sub(merge_ls['JGSJ_y'])  # jgsj_x - jgsj_y，即下游检测时间-上游检测时间
+    # 计算结果从timedelta转为int，以秒为单位
+    merge_ls['travel_time'] = (merge_ls['travel_time'] / np.timedelta64(1, 's')).astype(int)
+    merge_ls = merge_ls.sort_values(by=['JGSJ_y'], ascending=True)  # 将dataframe按照JGSJ_y的排序
+    merge_ls = merge_ls.drop_duplicates('JGSJ_x', 'last', inplace=False)  # 按JGSJ_x，去除该列下面的重复行,删除重复项并保留最后一次出现的项
+    merge_ls = merge_ls.drop_duplicates('JGSJ_y', 'last', inplace=False)  # 按JGSJ_y，去除该列下面的重复行,删除重复项并保留最后一次出现的项
+
+    # print(merge_ls['travel_time'].dtypes)
+    merge_ls = merge_ls[
+        ['HPHM', 'HPZL_y', 'JGSJ_x', 'JGSJ_y', 'travel_time', 'CDBH_x', 'CDBH_y']]  # 提取列表中的5列组成新的merge_ls
+    merge_ls.rename(columns={'JGSJ_x': 'JGSJ_OUT', 'JGSJ_y': 'JGSJ_IN', 'CDBH_x': 'CDBH_OUT', 'CDBH_y': 'CDBH_IN',
+                             'HPZL_y': 'HPZL'}, inplace=True)
+    merge_ls['date_types'] = date_types  # 新增一列，用于表征日期性质，0：工作日；1：周末；2：节假日
+    merge_ls['SSID_IN'] = start_ssid
+    merge_ls['SSID_OUT'] = end_ssid
+    columns_order = ['HPHM', 'HPZL', 'SSID_IN', 'CDBH_IN', 'JGSJ_IN', 'SSID_OUT', 'CDBH_OUT', 'JGSJ_OUT', 'travel_time',
+                     'date_types']
+    merge_ls = merge_ls[columns_order]
+
+    free(conn, cr)
+    return merge_ls
+
+
+# 将dataframe转换成list，方便导入数据库
+def dataframe_Tolist(merge_ls):
+    HPHM = merge_ls['HPHM'].tolist()
+    HPZL = merge_ls['HPZL'].tolist()
+    SSID_IN = merge_ls['SSID_IN'].tolist()
+    CDBH_IN = merge_ls['CDBH_IN'].tolist()
+    JGSJ_IN = merge_ls['JGSJ_IN'].tolist()
+    SSID_OUT = merge_ls['SSID_OUT'].tolist()
+    CDBH_OUT = merge_ls['CDBH_OUT'].tolist()
+    JGSJ_OUT = merge_ls['JGSJ_OUT'].tolist()
+    TRAVEL_TIME = merge_ls['travel_time'].tolist()
+    DATE_TYPES = merge_ls['date_types'].tolist()
+
+    a = [HPHM, HPZL, SSID_IN, CDBH_IN, JGSJ_IN, SSID_OUT, CDBH_OUT, JGSJ_OUT, TRAVEL_TIME, DATE_TYPES]
+    return list(zip(*a))
+
+
+def Insert_db(conn, table_name, result):
+    if conn == None:
+        conn = get_connection_oracle()
+    cr = conn.cursor()
+
+    sql = (
+              "INSERT INTO %s(HPHM, HPZL, SSID_IN, CDBH_IN, JGSJ_IN, SSID_OUT, CDBH_OUT, JGSJ_OUT, TRAVEL_TIME, DATE_TYPES) VALUES (:1, :2, :3, :4, :5, :6,:7,:8,:9,:10)") % (
+              table_name)
+
+    # cr.executemany(sql, result)
+    # conn.commit()
+    try:
+        cr.executemany(sql, result)
+        conn.commit()
+        print('insert successfully!')
+    except:
+        conn.rollback()
+
+        # 关闭游标、关闭数据库连接
+    cr.close()
+    conn.close()
+
+
+
+if __name__ == '__main__':
+    starttime = datetime.datetime.now()  # 统计程序的开始时刻
+    # # 开发测试用
+    # conn = None
+    # query_res = plate_match(conn, ['HK-93', 'HK-92'],
+    #                         [('1', '2', '3', '4', '5', '6', '10', '11', '12'), ('1', '2', '3')],
+    #                         ['2019-05-03 16:00:00', '2019-05-03 15:50:00'],
+    #                         ['2019-05-03 18:00:00', '2019-05-03 18:10:00'])
+    # print(query_res)
+    # result = dataframe_Tolist(query_res)
+    # Insert_db(conn, 'TRAVEL_TIME_LIUZHONG', result)
+
+    ## 跑批量数据用的
+    start_time_list, end_time_list = Start_End_time_list('2019-01-01 15:30:00', 485)
+    for i in range(len(start_time_list)):
+        conn = None
+        # # 下面是包含路中卡口的4个子路段
+        query_res_HK107TOHK92 = plate_match(conn,['HK-107', 'HK-92'],[('1','2'),('1','2','3')],start_time_list[i], end_time_list[i])
+        query_res_HK107TOHK93 = plate_match(conn, ['HK-107', 'HK-93'], [('3', '4'), ('7', '8', '9')],
+                                            start_time_list[i], end_time_list[i])
+        query_res_HK93TOHK107 = plate_match(conn, ['HK-93', 'HK-107'], [('1', '2', '3', '4', '5', '6', '10','11','12'), ('1', '2')],
+                                            start_time_list[i], end_time_list[i])
+        query_res_HK92TOHK107 = plate_match(conn, ['HK-92', 'HK-107'], [('4', '5', '6', '7', '8', '9', '10'), ('3', '4')],
+                                            start_time_list[i], end_time_list[i])
+        # # 下面是不包含路中卡口的路段2个方向
+        query_res_HK93TOHK92 = plate_match(conn, ['HK-93', 'HK-92'], [('1','2','3','4','5','6','10','11','12'),('1', '2', '3')], start_time_list[i], end_time_list[i])
+        query_res_HK92TOHK93 = plate_match(conn, ['HK-92', 'HK-93'],
+                                           [('4', '5', '6', '7', '8', '9', '10'), ('7', '8', '9')],
+                                           start_time_list[i], end_time_list[i])
+
+        conn_oracle = None
+        result_HK107TOHK92 = dataframe_Tolist(query_res_HK107TOHK92)
+        print('result_HK107TOHK92')
+        Insert_db(conn_oracle, 'TRAVEL_TIME_LIUZHONG', result_HK107TOHK92)
+
+        result_HK107TOHK93 = dataframe_Tolist(query_res_HK107TOHK93)
+        print('result_HK107TOHK93')
+        Insert_db(conn_oracle, 'TRAVEL_TIME_LIUZHONG', result_HK107TOHK93)
+
+        result_HK93TOHK107 = dataframe_Tolist(query_res_HK93TOHK107)
+        print('result_HK93TOHK107')
+        Insert_db(conn_oracle, 'TRAVEL_TIME_LIUZHONG', result_HK93TOHK107)
+
+        result_HK92TOHK107 = dataframe_Tolist(query_res_HK92TOHK107)
+        print('result_HK92TOHK107')
+        Insert_db(conn_oracle, 'TRAVEL_TIME_LIUZHONG', result_HK92TOHK107)
+
+        result_HK93TOHK92 = dataframe_Tolist(query_res_HK93TOHK92)
+        print('result_HK93TOHK92')
+        Insert_db(conn_oracle, 'TRAVEL_TIME_LIUZHONG', result_HK93TOHK92)
+
+
+        result_HK92TOHK93 = dataframe_Tolist(query_res_HK92TOHK93)
+        print('result_HK92TOHK93')
+        Insert_db(conn_oracle, 'TRAVEL_TIME_LIUZHONG', result_HK92TOHK93)
+
+        endtime = datetime.datetime.now()
+        print("the program runs : %d s" % (endtime - starttime).seconds)
